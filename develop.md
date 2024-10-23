@@ -1,6 +1,6 @@
 # Development Mode for Frappe Custom Apps
 
-## Prerequi : 
+## Prerequisites : 
 
 ```bash
 docker
