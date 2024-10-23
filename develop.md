@@ -1,0 +1,112 @@
+# Development Mode for Frappe Custom Apps
+
+## Prerequi : 
+
+```bash
+docker
+docker-compose
+user added to docker group
+```
+
+
+Clone the Frappe Docker Repository
+
+```bash
+git clone https://github.com/frappe/frappe_docker.git
+cd frappe_docker
+```
+
+## Setup Development Container
+
+- Copy the Dev Container Config:
+
+    ```bash
+    cp -R devcontainer-example .devcontainer
+    cp -R development/vscode-example development/.vscode
+    ```
+
+- Open in VSCode
+
+    Open the frappe_docker folder in VSCode.
+
+    ```bash
+    code .
+    ```
+
+- Reopen in Container:
+
+- Use Command Palette (Ctrl + Shift + P) and select Dev Containers: Rebuild and Reopen in Container.
+
+1. Provide write permissions
+
+    ```bash
+    sudo chown -R frappe:frappe /workspace/development
+    ```
+
+2. Run the following commands:
+
+    ```bash
+    nvm use v18
+    PYENV_VERSION=3.10.13 bench init --skip-redis-config-generation --frappe-branch version-15 frappe-bench
+    cd frappe-bench
+    ```
+
+3. Configure Database Connections
+
+    Run these commands inside the container:
+
+    ```bash
+    bench set-config -g db_host mariadb
+    bench set-config -g redis_cache redis://redis-cache:6379
+    bench set-config -g redis_queue redis://redis-queue:6379
+    bench set-config -g redis_socketio redis://redis-queue:6379
+    ```
+
+4. Create a New Site
+
+    ```bash
+    bench new-site --mariadb-root-password 123 --admin-password admin --no-mariadb-socket clapgrow.com
+    ```
+
+5. Set Developer Mode
+
+    ```bash
+    bench --site mysite.localhost set-config developer_mode 1
+    bench --site mysite.localhost clear-cache
+    ```
+
+6. Install Custom Apps
+
+    > **NOTE:** Please use your own personal access token in place of `{{PAT}}`.
+
+    ```bash
+    bench get-app https://{{PAT}}@github.com/clapgrow/clapgrow_app_v2.git
+
+    bench get-app https://github.com/The-Commit-Company/frappe-types.git
+    ```
+
+7. Use Site
+
+    ```bash
+    bench use clapgrow.com
+    ```
+
+8. Start the bench
+
+    ```bash
+    bench start
+    ```
+
+9. Goto <http://127.0.0.1:8000>, login using Administrator as username and admin as the password.
+
+10. After login, in the searchbar (in frappe, we call it `awesome bar` because Frappe is Awesome), search for `CG User` doctype.
+
+11. Create a new record in CG User.  Then Go the User doctype similarly. In the User, go the settings page of the newly created user and then create a password. Logout and Login using that user. Logout.
+
+12. You can access the Frontend page at `http://127.0.0.1:8000/clapgrow` (production server). Login and hooray! We are at the dashboard page!
+
+13. You can also access the local development react server at <http://127.0.0.1:8080>. However, server side changes can only be visible after we do the following in the Bench and check the production server:
+
+    ```bash
+    bench update --requirements --patch --build
+    ```
